@@ -1,0 +1,21 @@
+{
+  "name": "hypixel-w-l-twitch",
+  "version": "1.0.0",
+  "description": "Looks at streams to find Victory/Game Over text in a Twitch Stream.",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pro6dog/Hypixel-W-L-Twitch.git"
+  },
+  "author": "pro6_dog, yldbouk",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/pro6dog/Hypixel-W-L-Twitch/issues"
+  },
+  "homepage": "https://github.com/pro6dog/Hypixel-W-L-Twitch#readme",
+  "dependencies": {
+    "fs": "0.0.1-security",
+    "tesseract.js": "^2.1.4",
+    "twitch-m3u8": "^1.1.4"
+  }
+}
