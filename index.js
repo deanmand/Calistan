@@ -1,18 +1,22 @@
 const fs = require('fs')
+const chokidar = require('chokidar')
 const twitch = require('twitch-m3u8')
-const tesseract = require('tesseract.js')
+const img = require('image-clipper')
+img.configure('canvas', require('canvas'));
+const { createWorker } = require('tesseract.js');
 const child_process = require('child_process');
+const worker = createWorker({logger: m => console.debug(m)});
 var strimmeronline = false;
 var disconnected = false;
 var ffmpegActive = false;
 var streamURL = null;
 
 
+
 if(typeof process.argv[2] != "string") {
     console.error("Please provide the username of a Twitch user.");
     process.exit(1)
 }
-
 
 let getStreamURL = new Promise(async function(urlAquired, offline) {
     console.log("Getting stream URLs...")
@@ -69,6 +73,33 @@ async function startffmpeg(){
     });
 }
 
+async function recognise(path){
+    // need to crop and resize to make stuff faster.
+    img(path, function(){
+        this.resize(640,360)
+        .crop(170,110,300,65)
+        .quality(50)
+        .toFile('./new.jpg', function(){})
+        .toDataURL(async function(dataURL){
+            const { data: { text } } = await worker.recognize(dataURL);
+            console.log(text)
+            // doesnt recognise anything
+            // maybe separate all other colors from the gold or red of the text
+        })
+        ;
+    })
+    
+}
+
+async function watchFolder(){
+    console.log("Listening for folder changes...");
+    // init tesseract
+    await worker.load();
+    await worker.loadLanguage('eng');
+    await worker.initialize('eng');
+    chokidar.watch('./images/').on('add', (path, evt) => {recognise(path)});
+}
+
 var l = true;
 async function checkStatus() {
     while (l) { // do individual checks
@@ -122,3 +153,4 @@ async function checkStatus() {
 }
 
 checkStatus()
+watchFolder()
