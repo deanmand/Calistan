@@ -78,12 +78,10 @@ async function start(){
                             currentSession.loss++;
                             console.log(`Game Over! Current W/L: ${currentSession.get()} @Xadreco <3`)
                             
-                        } else {
-                            // no change
-                            continue
                         }
                     })
                 })
+            await new Promise(r => setTimeout(r, 2000));
             continue
         } else await new Promise(r => setTimeout(r, 300000)); // TO-DO: figure out when disconnected 
     }
