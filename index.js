@@ -42,28 +42,36 @@ async function start(){
             // previous stats to check for win/lose
             const uuid = "59642e63027244afbd0fca4bd89b25e3";
 
-//            console.debug("getting "+ uuid);
             const options = {
                 hostname: 'api.hypixel.net',
                 port: 443,
                 path: `/player?key=${key}&uuid=${uuid}`,
                 method: 'GET'
-              }
-              
-                https.request(options, res => {
-                    console.log(`(Hypixel) [INFO] statusCode: ${res.statusCode}`)
-                    res.on('data', html => {
-//                      console.debug(uuid + " got from hypixel")
-                        const data = JSON.parse(html);
+            }
+
+            var resBody = "";
+            const req = https.request(options, res => {
+                console.log(`(Hypixel) [INFO] statusCode: ${res.statusCode}`)
+
+                res.on('data', data => {
+                    resBody += data;
+                    resBody.replace("<html>",'')
+                });
+
+                res.on('end', function(){
+                    try {
+//                         console.debug(uuid + " got from hypixel")
+                        const data = JSON.parse(resBody);
                         if (!data["success"]) {
                             console.error("(Hypixel) [ERROR] Request did not succeed from hypixel's side.");
                             return;
                         }
-                        const bwStats = data['stats']['Bedwars'];
+                        const bwStats = data['player']['stats']['Bedwars'];
                         
                         //first check if this is the first time checking
                         // TO-DO: do this on first run instead of every time we are checking
                         if(!prevBWStats.populated) {
+                            console.debug("first data recieved")
                             prevBWStats.populated = true;
                             prevBWStats.win = bwStats["wins_bedwars"];
                             prevBWStats.loss = bwStats["losses_bedwars"];
@@ -81,12 +89,16 @@ async function start(){
                             currentSession.loss++;
                             console.log(`Game Over! Current W/L: ${currentSession.get()} @Xadreco <3`)
                             
-                        }
-                    })
-                })
+                        } else console.debug('no change')
+                    } catch(e){
+                        console.error(e)
+                    }
+                });
+            });
+            req.end();
             await new Promise(r => setTimeout(r, 2000));
             continue
-        } else await new Promise(r => setTimeout(r, 300000)); // TO-DO: figure out when disconnected 
+        } else await new Promise(r => setTimeout(r, 3000)); // TO-DO: figure out when disconnected 
     }
 }
 
