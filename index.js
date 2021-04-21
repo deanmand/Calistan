@@ -1,9 +1,11 @@
 const fs = require('fs')
 const twitch = require('twitch-m3u8')
+const https = require('https')
 const { key } = require("./key.json");
 var strimmeronline = false;
 var disconnected = false;
-var streamURL = null;
+const prevBWStats = {populated:false,win:0,loss:0}
+const currentSession = {win:0, loss:0, get:function(){return `${currentSession.win}:${currentSession.loss}`}}
 
 
 if(typeof process.argv[2] != "string") {
@@ -35,12 +37,55 @@ async function start(){
             
             // do stats check and start comparing against
             // previous stats to check for win/lose
-            // uuid = 59642e63027244afbd0fca4bd89b25e3
+            const uuid = "59642e63027244afbd0fca4bd89b25e3";
 
-
-
+//            console.debug("getting "+ uuid);
+            const options = {
+                hostname: 'api.hypixel.net',
+                port: 443,
+                path: `/player?key=${key}&uuid=${uuid}`,
+                method: 'GET'
+              }
+              
+                const req = https.request(options, res => {
+                    console.log(`(Hypixel) [INFO] statusCode: ${res.statusCode}`)
+                    res.on('data', html => {
+//                      console.debug(uuid + " got from hypixel")
+                        const data = JSON.parse(html);
+                        if (!data["success"]) {
+                            console.error("(Hypixel) [ERROR] Request did not succeed from hypixel's side.");
+                            continue;
+                        }
+                        const bwStats = data['stats']['Bedwars'];
+                        
+                        //first check if this is the first time checking
+                        // TO-DO: do this on first run instead of every time we are checking
+                        if(!prevBWStats.populated) {
+                            prevBWStats.populated = true;
+                            prevBWStats.win = bwStats["wins_bedwars"];
+                            prevBWStats.loss = bwStats["losses_bedwars"];
+                            continue
+                        }
+    
+                        // send the console.log()s to twitch as well
+                        if (bwStats["wins_bedwars"] > prevBWStats.wins) {
+                            // victory
+                            currentSession.win++;
+                            console.log(`Victory! Current W/L: ${currentSession.get()} @Xadreco <3`)
+                            
+                        } else if (bwStats["losses_bedwars"] > prevBWStats.loss) {
+                            // game over
+                            currentSession.loss++;
+                            console.log(`Game Over! Current W/L: ${currentSession.get()} @Xadreco <3`)
+                            
+                        } else {
+                            // no change
+                            continue
+                        }
+                    })
+                })
             continue
-        } else await new Promise(r => setTimeout(r, 300000));
+        } else await new Promise(r => setTimeout(r, 300000)); // TO-DO: figure out when disconnected 
     }
 }
 
