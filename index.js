@@ -18,11 +18,14 @@ function checkStreamOnline() {
     twitch.getStream(process.argv[2])
     .then(data => {
         strimmeronline = true;
+        console.log(`${new Date().toUTCString()}: ${process.argv[2]} is online!`)
         return
     })
     .catch(err => { // TO-DO: make date.now an actual date instead of epoch
-        if(err == "TypeError: Cannot read property 'value' of null") {
-            console.debug(`${Date.now()}: ${process.argv[2]} is offline or does not exist.`)
+        
+        if(err == "TypeError: Cannot read property 'value' of null" || 
+           err == "Error: Transcode does not exist - the stream is probably offline") {
+            console.debug(`${new Date().toUTCString()}: ${process.argv[2]} is offline or does not exist.`)
             strimmeronline = false;
         }
         else
@@ -47,14 +50,14 @@ async function start(){
                 method: 'GET'
               }
               
-                const req = https.request(options, res => {
+                https.request(options, res => {
                     console.log(`(Hypixel) [INFO] statusCode: ${res.statusCode}`)
                     res.on('data', html => {
 //                      console.debug(uuid + " got from hypixel")
                         const data = JSON.parse(html);
                         if (!data["success"]) {
                             console.error("(Hypixel) [ERROR] Request did not succeed from hypixel's side.");
-                            continue;
+                            return;
                         }
                         const bwStats = data['stats']['Bedwars'];
                         
@@ -64,7 +67,7 @@ async function start(){
                             prevBWStats.populated = true;
                             prevBWStats.win = bwStats["wins_bedwars"];
                             prevBWStats.loss = bwStats["losses_bedwars"];
-                            continue
+                            return
                         }
     
                         // send the console.log()s to twitch as well
