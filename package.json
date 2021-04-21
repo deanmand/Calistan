@@ -18,6 +18,7 @@
     "chokidar": "^3.5.1",
     "fs": "0.0.1-security",
     "image-clipper": "^0.4.4",
+    "sharp": "^0.28.1",
     "tesseract.js": "^2.1.4",
     "twitch-m3u8": "^1.1.4"
   }

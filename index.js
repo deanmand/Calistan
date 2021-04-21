@@ -1,6 +1,7 @@
 const fs = require('fs')
 const chokidar = require('chokidar')
 const twitch = require('twitch-m3u8')
+const sharp = require('sharp')
 const img = require('image-clipper')
 img.configure('canvas', require('canvas'));
 const { createWorker } = require('tesseract.js');
@@ -76,9 +77,9 @@ async function startffmpeg(){
 async function recognise(path){
     // need to crop and resize to make stuff faster.
     img(path, function(){
-        this.resize(640,360)
-        .crop(170,110,300,65)
-        .quality(50)
+        this.resize(1280,720)
+        .crop(480,290,320,80)
+        .quality(100)
         .toFile('./new.jpg', function(){})
         .toDataURL(async function(dataURL){
             const { data: { text } } = await worker.recognize(dataURL);
