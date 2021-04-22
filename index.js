@@ -51,7 +51,10 @@ async function start(){
 
             var resBody = "";
             const req = https.request(options, res => {
-                console.log(`(Hypixel) [INFO] statusCode: ${res.statusCode}`)
+                if(res.statusCode != 200) {
+                    console.log("API returned "+res.statusCode+". Aborting this iteration.");
+                    return;
+                }
 
                 res.on('data', data => {
                     resBody += data;
@@ -77,28 +80,32 @@ async function start(){
                             prevBWStats.loss = bwStats["losses_bedwars"];
                             return
                         }
+
+                        console.debug(prevBWStats, "\n\n", bwStats["wins_bedwars"], "\n", bwStats["losses_bedwars"])
     
                         // send the console.log()s to twitch as well
                         if (bwStats["wins_bedwars"] > prevBWStats.wins) {
                             // victory
                             currentSession.win++;
+                            prevBWStats.wins = bwStats["wins_bedwars"];
                             console.log(`Victory! Current W/L: ${currentSession.get()} @Xadreco <3`)
                             
                         } else if (bwStats["losses_bedwars"] > prevBWStats.loss) {
                             // game over
                             currentSession.loss++;
+                            prevBWStats.loss = bwStats["losses_bedwars"];
                             console.log(`Game Over! Current W/L: ${currentSession.get()} @Xadreco <3`)
                             
                         } else console.debug('no change')
                     } catch(e){
-                        console.error(e)
+                        console.warn("Received malformed information. Aborting this iteration.")
                     }
                 });
             });
             req.end();
             await new Promise(r => setTimeout(r, 2000));
             continue
-        } else await new Promise(r => setTimeout(r, 3000)); // TO-DO: figure out when disconnected 
+        } else await new Promise(r => setTimeout(r, 10000)); // TO-DO: figure out when disconnected 
     }
 }
 
