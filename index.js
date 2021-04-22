@@ -1,7 +1,11 @@
 const fs = require('fs')
 const twitch = require('twitch-m3u8')
 const https = require('https')
-const { key } = require("./key.json");
+const { key } = require("./config.json")
+const { uuid } = require("./config.json")
+const { botusr } = require("./config.json")
+const { oauth } = require("./config.json");
+
 var strimmeronline = false;
 var disconnected = false;
 const prevBWStats = {populated:false,win:0,loss:0}
@@ -40,7 +44,6 @@ async function start(){
             
             // do stats check and start comparing against
             // previous stats to check for win/lose
-            const uuid = "59642e63027244afbd0fca4bd89b25e3";
 
             const options = {
                 hostname: 'api.hypixel.net',
@@ -88,13 +91,13 @@ async function start(){
                             // victory
                             currentSession.win++;
                             prevBWStats.wins = bwStats["wins_bedwars"];
-                            console.log(`Victory! Current W/L: ${currentSession.get()} @Xadreco <3`)
+                            console.log(`Victory! Current W/L: ${currentSession.get()} <3`)
                             
                         } else if (bwStats["losses_bedwars"] > prevBWStats.loss) {
                             // game over
                             currentSession.loss++;
                             prevBWStats.loss = bwStats["losses_bedwars"];
-                            console.log(`Game Over! Current W/L: ${currentSession.get()} @Xadreco <3`)
+                            console.log(`Game Over! Current W/L: ${currentSession.get()} <3`)
                             
                         } else console.debug('no change')
                     } catch(e){
@@ -103,7 +106,7 @@ async function start(){
                 });
             });
             req.end();
-            await new Promise(r => setTimeout(r, 2000));
+            await new Promise(r => setTimeout(r, 5000));
             continue
         } else await new Promise(r => setTimeout(r, 10000)); // TO-DO: figure out when disconnected 
     }
