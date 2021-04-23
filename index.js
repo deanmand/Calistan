@@ -1,16 +1,58 @@
 const fs = require('fs')
 const twitch = require('twitch-m3u8')
 const https = require('https')
-const { key } = require("./config.json")
-const { uuid } = require("./config.json")
-const { botusr } = require("./config.json")
-const { oauth } = require("./config.json");
+const tmi = require('tmi.js')
+const config = require("./config.json");
+
+
+// Define configuration options
+const options = {
+    identity: {
+      username: (config.botusr),
+      password: (config.oauth),
+    },
+    channels: [config.channel]
+  };
 
 var strimmeronline = false;
 var disconnected = false;
 const prevBWStats = {populated:false,win:0,loss:0}
 const currentSession = {win:0, loss:0, get:function(){return `${currentSession.win}:${currentSession.loss}`}}
 
+const client = new tmi.client(options);
+
+// Called every time a message comes in
+function onMessageHandler (target, context, msg, self) {
+    if (self) { return; } // Ignore messages from the bot
+  
+    // Remove whitespace from chat message
+    const commandName = msg.trim();
+  
+    // If the command is known, let's execute it
+    if (commandName === '~wl') {
+
+      client.say(target, `The current W/L is ${currentSession.get()}`);
+      console.log(`* Executed ${commandName} command`);
+    } else {
+      console.log(`* Unknown command ${commandName}`);
+    }
+  }
+
+
+// Register our event handlers (defined below)
+client.on('message', onMessageHandler);
+client.on('connected', function(){
+
+
+console.log("Connected to Twitch")
+
+client.say(config.channel, `Successfully connected to Hypixel!`)
+
+});
+
+
+// Connect to Twitch:
+client.connect().catch(e => {console.error(e)});
 
 if(typeof process.argv[2] != "string") {
     console.error("Please provide the username of a Twitch user.");
@@ -38,6 +80,7 @@ function checkStreamOnline() {
     })
 }
 
+
 async function start(){
     while(true){
         if(strimmeronline){
@@ -48,7 +91,7 @@ async function start(){
             const options = {
                 hostname: 'api.hypixel.net',
                 port: 443,
-                path: `/player?key=${key}&uuid=${uuid}`,
+                path: `/player?key=${config.key}&uuid=${config.uuid}`,
                 method: 'GET'
             }
 
@@ -92,13 +135,14 @@ async function start(){
                             currentSession.win++;
                             prevBWStats.wins = bwStats["wins_bedwars"];
                             console.log(`Victory! Current W/L: ${currentSession.get()} <3`)
+                            client.action(config.channel, `Victory! Current W/L: ${currentSession.get()} PogChamp <3`)
                             
                         } else if (bwStats["losses_bedwars"] > prevBWStats.loss) {
                             // game over
                             currentSession.loss++;
                             prevBWStats.loss = bwStats["losses_bedwars"];
                             console.log(`Game Over! Current W/L: ${currentSession.get()} <3`)
-                            
+                            client.action(config.channel, `Game Over! Current W/L: ${currentSession.get()} NotLikeThis <3`)
                         } else console.debug('no change')
                     } catch(e){
                         console.warn("Received malformed information. Aborting this iteration.")
